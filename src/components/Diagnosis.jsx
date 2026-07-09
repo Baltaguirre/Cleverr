@@ -1,5 +1,16 @@
-import { StageHeader, SectionBlock, Field, Chips, CriterionBox, Warning, SaveButton } from './ui'
+import {
+  StageHeader,
+  SectionBlock,
+  Field,
+  Chips,
+  CriterionBox,
+  Warning,
+  SaveButton,
+  SuggestBar,
+  SuggestionCard,
+} from './ui'
 import { useSaveFeedback } from '../hooks/useSaveFeedback'
+import { useGeneration } from '../hooks/useGeneration'
 
 const LEVELS = [
   { v: '0', label: 'Zero contact' },
@@ -31,11 +42,27 @@ const DEADLINE = [
 // Vague verbs that signal a goal phrased as an intention rather than an outcome.
 const VAGUE_STARTS = ['understand', 'know about', 'learn about', 'get to know', 'comprehend', 'familiarize']
 
-const Diagnosis = ({ data, update }) => {
+const Diagnosis = ({ data, update, topic, passphrase }) => {
   const [saved, triggerSave] = useSaveFeedback()
+  const gen = useGeneration('diagnosis', () => topic, passphrase)
   const set = (field, value) => update({ [field]: value })
 
   const goalIsVague = VAGUE_STARTS.some((verb) => data.goal.trim().toLowerCase().startsWith(verb))
+
+  const accept = (field) => {
+    set(field, gen.suggestions[field])
+    gen.dismiss(field)
+  }
+  const acceptAll = () => {
+    Object.entries(gen.suggestions).forEach(([field, value]) => set(field, value))
+    gen.clearSuggestions()
+  }
+  const suggestionFor = (field) =>
+    gen.suggestions?.[field] ? (
+      <SuggestionCard text={gen.suggestions[field]} onAccept={() => accept(field)} onDismiss={() => gen.dismiss(field)} />
+    ) : null
+
+  const hasSubject = data.topic.trim() !== ''
 
   const save = () => {
     update({ completed: true })
@@ -45,6 +72,25 @@ const Diagnosis = ({ data, update }) => {
   return (
     <div className="stage">
       <StageHeader number="1" title="Diagnosis" subtitle="Where you start and where you are going" />
+
+      <SuggestBar
+        label="✨ Suggest from subject"
+        onSuggest={gen.run}
+        loading={gen.loading}
+        error={gen.error}
+        disabled={!passphrase || !hasSubject}
+        disabledHint={
+          !passphrase
+            ? 'Add your access passphrase in AI settings to enable.'
+            : 'Enter the topic first to get suggestions.'
+        }
+      >
+        {gen.suggestions && (
+          <button type="button" className="btn-mini btn-mini-accent" onClick={acceptAll}>
+            Accept all
+          </button>
+        )}
+      </SuggestBar>
 
       <SectionBlock tag="A" title="Starting point">
         <Field label="Topic">
@@ -56,6 +102,7 @@ const Diagnosis = ({ data, update }) => {
         </Field>
         <Field label="Current ability" hint="What can you already do with this skill today?">
           <textarea value={data.currentAbility} onChange={(e) => set('currentAbility', e.target.value)} />
+          {suggestionFor('currentAbility')}
         </Field>
         <Field label="Level" hint="How much contact have you had with this skill so far?">
           <Chips options={LEVELS} value={data.level} onChange={(v) => set('level', v)} />
@@ -76,12 +123,15 @@ const Diagnosis = ({ data, update }) => {
               This sounds like a vague intention. Reframe it as something you can build, ship or demonstrate.
             </Warning>
           )}
+          {suggestionFor('goal')}
         </Field>
         <Field label="Success criterion" hint="How will you know you got there? What will you be able to do?">
           <textarea value={data.successCriterion} onChange={(e) => set('successCriterion', e.target.value)} />
+          {suggestionFor('successCriterion')}
         </Field>
         <Field label="Project hypothesis" hint="What could you build to prove you learned it?">
           <textarea value={data.project} onChange={(e) => set('project', e.target.value)} />
+          {suggestionFor('project')}
         </Field>
       </SectionBlock>
 
@@ -91,6 +141,7 @@ const Diagnosis = ({ data, update }) => {
           hint="What happens if you do not? Why does it matter now?"
         >
           <textarea value={data.motivation} onChange={(e) => set('motivation', e.target.value)} />
+          {suggestionFor('motivation')}
         </Field>
       </SectionBlock>
 

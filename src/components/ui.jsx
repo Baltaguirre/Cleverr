@@ -71,3 +71,44 @@ export const SaveButton = ({ label, onSave, saved }) => (
     {saved ? '✓ Saved' : label}
   </button>
 )
+
+// Header row with the "Suggest with AI" action plus loading/error/disabled state.
+export const SuggestBar = ({ label, onSuggest, loading, error, disabled, disabledHint, children }) => (
+  <div className="suggest-bar">
+    <button type="button" className="btn-suggest" onClick={onSuggest} disabled={loading || disabled}>
+      {loading ? '✨ Generating…' : label}
+    </button>
+    {disabled && disabledHint && <span className="suggest-hint">{disabledHint}</span>}
+    {error && <span className="suggest-error">⚠ {error}</span>}
+    {children}
+  </div>
+)
+
+// An AI-drafted value shown under a field, awaiting accept or dismiss.
+export const SuggestionCard = ({ text, onAccept, onDismiss }) => (
+  <div className="suggestion-card">
+    <div className="suggestion-label">✨ Suggested</div>
+    <p className="suggestion-text">{text}</p>
+    <div className="suggestion-actions">
+      <button type="button" className="btn-mini btn-mini-accent" onClick={onAccept}>
+        Accept
+      </button>
+      <button type="button" className="btn-mini" onClick={onDismiss}>
+        Dismiss
+      </button>
+    </div>
+  </div>
+)
+
+// Non-destructive AI guidance for the stages that stay human (Cycles, Consolidation).
+export const CoachingPanel = ({ text, onClose }) => (
+  <div className="coaching-panel">
+    <div className="coaching-head">
+      <span>💡 Coaching</span>
+      <button type="button" className="coaching-close" onClick={onClose} aria-label="Dismiss">
+        ×
+      </button>
+    </div>
+    <p className="coaching-text">{text}</p>
+  </div>
+)
