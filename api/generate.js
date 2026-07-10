@@ -22,8 +22,8 @@ export default async function handler(req, res) {
     return
   }
 
-  const { stage, topic } = req.body || {}
-  const request = buildRequest(stage, topic)
+  const { stage, topic, resource } = req.body || {}
+  const request = buildRequest(stage, topic, { resource })
   if (!request) {
     res.status(400).json({ error: `Unknown stage: ${stage}` })
     return
