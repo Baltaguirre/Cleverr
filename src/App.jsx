@@ -224,9 +224,7 @@ const AISettingsModal = ({ passphrase, onSave, onClose }) => {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h3 className="modal-title">AI settings</h3>
         <p className="modal-sub">
-          Enter the access passphrase (the <code>APP_PASSPHRASE</code> configured on the server). It is stored
-          locally in this browser and sent with each AI request. Your Anthropic key never lives here — it stays
-          server-side.
+          Enter the <code>APP_PASSPHRASE</code> 
         </p>
         <input
           autoFocus
