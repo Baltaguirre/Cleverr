@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTopics } from './hooks/useTopics'
+import { useSettings } from './hooks/useSettings'
 import { STAGES, isStageCompleted, countCompleted } from './stages'
 import Diagnosis from './components/Diagnosis'
 import Map from './components/Map'
@@ -18,7 +19,7 @@ const ProgressBar = ({ done }) => (
   </>
 )
 
-const Sidebar = ({ topics, activeId, onSelect, onHome, onNew }) => (
+const Sidebar = ({ topics, activeId, onSelect, onHome, onNew, onSettings, hasKey }) => (
   <aside className="sidebar">
     <button type="button" className="brand" onClick={onHome}>
       ◈ Learn
@@ -41,6 +42,10 @@ const Sidebar = ({ topics, activeId, onSelect, onHome, onNew }) => (
         </button>
       ))}
     </nav>
+    <button type="button" className="btn-settings" onClick={onSettings}>
+      <span className={`settings-dot ${hasKey ? 'settings-dot-on' : ''}`} />
+      AI settings
+    </button>
   </aside>
 )
 
@@ -110,22 +115,29 @@ const StageNav = ({ topic, onSelectStage }) => (
   </nav>
 )
 
-const TopicView = ({ topic, onBack, onDelete, patchStage, addCycle, setCurrentStage }) => {
+const TopicView = ({ topic, onBack, onDelete, patchStage, addCycle, setCurrentStage, passphrase }) => {
   const stageKey = STAGES.find((stage) => stage.num === topic.currentStage).key
   const update = (patch) => patchStage(topic.id, stageKey, patch)
 
   const renderStage = () => {
     switch (stageKey) {
       case 'diagnosis':
-        return <Diagnosis data={topic.stages.diagnosis} update={update} />
+        return <Diagnosis data={topic.stages.diagnosis} update={update} topic={topic} passphrase={passphrase} />
       case 'map':
-        return <Map data={topic.stages.map} update={update} />
+        return <Map data={topic.stages.map} update={update} topic={topic} passphrase={passphrase} />
       case 'plan':
-        return <Plan data={topic.stages.plan} update={update} />
+        return <Plan data={topic.stages.plan} update={update} topic={topic} passphrase={passphrase} />
       case 'cycles':
-        return <Cycles cycles={topic.stages.cycles} addCycle={(cycle) => addCycle(topic.id, cycle)} />
+        return (
+          <Cycles
+            cycles={topic.stages.cycles}
+            addCycle={(cycle) => addCycle(topic.id, cycle)}
+            topic={topic}
+            passphrase={passphrase}
+          />
+        )
       case 'consolidation':
-        return <Consolidation data={topic.stages.consolidation} update={update} />
+        return <Consolidation data={topic.stages.consolidation} update={update} topic={topic} passphrase={passphrase} />
       default:
         return null
     }
@@ -204,10 +216,46 @@ const DeleteModal = ({ topic, onConfirm, onClose }) => (
   </div>
 )
 
+const AISettingsModal = ({ passphrase, onSave, onClose }) => {
+  const [value, setValue] = useState(passphrase)
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h3 className="modal-title">AI settings</h3>
+        <p className="modal-sub">
+          Enter the <code>APP_PASSPHRASE</code> 
+        </p>
+        <input
+          autoFocus
+          type="password"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') onSave(value.trim())
+            if (e.key === 'Escape') onClose()
+          }}
+          placeholder="Access passphrase"
+        />
+        <div className="modal-actions">
+          <button type="button" className="btn-ghost" onClick={() => onSave('')}>
+            Clear
+          </button>
+          <button type="button" className="btn-primary" onClick={() => onSave(value.trim())}>
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const App = () => {
   const { topics, createTopic, deleteTopic, patchStage, addCycle, setCurrentStage } = useTopics()
+  const { passphrase, setPassphrase } = useSettings()
   const [activeId, setActiveId] = useState(null)
   const [showNew, setShowNew] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
 
   const activeTopic = topics.find((topic) => topic.id === activeId) ?? null
@@ -232,6 +280,8 @@ const App = () => {
         onSelect={setActiveId}
         onHome={() => setActiveId(null)}
         onNew={() => setShowNew(true)}
+        onSettings={() => setShowSettings(true)}
+        hasKey={!!passphrase}
       />
       <main className="main">
         {activeTopic ? (
@@ -242,6 +292,7 @@ const App = () => {
             patchStage={patchStage}
             addCycle={addCycle}
             setCurrentStage={setCurrentStage}
+            passphrase={passphrase}
           />
         ) : (
           <Home topics={topics} onOpen={setActiveId} onNew={() => setShowNew(true)} />
@@ -249,6 +300,16 @@ const App = () => {
       </main>
 
       {showNew && <NewTopicModal onCreate={handleCreate} onClose={() => setShowNew(false)} />}
+      {showSettings && (
+        <AISettingsModal
+          passphrase={passphrase}
+          onSave={(value) => {
+            setPassphrase(value)
+            setShowSettings(false)
+          }}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
       {deletingTopic && (
         <DeleteModal
           topic={deletingTopic}

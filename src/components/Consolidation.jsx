@@ -1,8 +1,10 @@
-import { StageHeader, SectionBlock, Field, CriterionBox, SaveButton } from './ui'
+import { StageHeader, SectionBlock, Field, CriterionBox, SaveButton, SuggestBar, CoachingPanel } from './ui'
 import { useSaveFeedback } from '../hooks/useSaveFeedback'
+import { useGeneration } from '../hooks/useGeneration'
 
-const Consolidation = ({ data, update }) => {
+const Consolidation = ({ data, update, topic, passphrase }) => {
   const [saved, triggerSave] = useSaveFeedback()
+  const gen = useGeneration('consolidation', () => topic, passphrase)
   const set = (field, value) => update({ [field]: value })
 
   const save = () => {
@@ -13,6 +15,16 @@ const Consolidation = ({ data, update }) => {
   return (
     <div className="stage">
       <StageHeader number="5" title="Consolidation" subtitle="Lock in what you learned" />
+
+      <SuggestBar
+        label="💡 Reflection prompts"
+        onSuggest={gen.run}
+        loading={gen.loading}
+        error={gen.error}
+        disabled={!passphrase}
+        disabledHint="Add your access passphrase in AI settings to enable."
+      />
+      {gen.coaching && <CoachingPanel text={gen.coaching} onClose={() => gen.setCoaching('')} />}
 
       <SectionBlock title="Consolidating what you learned">
         <Field label="Criterion achieved" hint="Yes or no, plus the evidence that backs it up.">

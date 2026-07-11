@@ -10,7 +10,7 @@ const createEmptyTopic = (id, name) => ({
   stages: {
     diagnosis: {
       completed: false,
-      topic: '',
+      topic: name[0].toUpperCase() + name.slice(1),
       currentAbility: '',
       level: '',
       goal: '',
@@ -33,7 +33,7 @@ const createEmptyTopic = (id, name) => ({
       completed: false,
       outputProject: '',
       milestones: '',
-      resources: '',
+      resources: [],
       firstAction: '',
       obstacles: '',
     },
@@ -60,7 +60,7 @@ export const useTopics = () => {
 
   const createTopic = (name) => {
     const id = crypto.randomUUID()
-    setTopics((prev) => [...prev, createEmptyTopic(id, name)])
+    setTopics((prev) => [...prev, createEmptyTopic(id, name[0].toUpperCase() + name.slice(1))])
     return id
   }
 
@@ -100,5 +100,8 @@ export const useTopics = () => {
     )
   }
 
-  return { topics, createTopic, deleteTopic, patchStage, addCycle, setCurrentStage }
+  const getTopic = (id) => {
+    return topics.find((topic) => topic.id === id)
+  }
+  return { topics, createTopic, deleteTopic, patchStage, addCycle, setCurrentStage, getTopic }
 }

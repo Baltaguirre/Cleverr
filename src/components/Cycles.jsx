@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { StageHeader, SectionBlock, Field, CriterionBox } from './ui'
+import { StageHeader, SectionBlock, Field, CriterionBox, SuggestBar, CoachingPanel } from './ui'
+import { useGeneration } from '../hooks/useGeneration'
 
 const EMPTY_FORM = {
   acquired: '',
@@ -21,9 +22,10 @@ const CycleRow = ({ label, value }) =>
     </div>
   ) : null
 
-const Cycles = ({ cycles, addCycle }) => {
+const Cycles = ({ cycles, addCycle, topic, passphrase }) => {
   const [form, setForm] = useState(EMPTY_FORM)
   const [expandedId, setExpandedId] = useState(null)
+  const gen = useGeneration('cycles', () => topic, passphrase)
 
   const set = (field, value) => setForm((prev) => ({ ...prev, [field]: value }))
 
@@ -41,6 +43,16 @@ const Cycles = ({ cycles, addCycle }) => {
   return (
     <div className="stage">
       <StageHeader number="4" title="Execution Cycle" subtitle="Acquire · Practice · Break · Reflect" />
+
+      <SuggestBar
+        label="💡 Coaching for this cycle"
+        onSuggest={gen.run}
+        loading={gen.loading}
+        error={gen.error}
+        disabled={!passphrase}
+        disabledHint="Add your access passphrase in AI settings to enable."
+      />
+      {gen.coaching && <CoachingPanel text={gen.coaching} onClose={() => gen.setCoaching('')} />}
 
       <SectionBlock title="New cycle">
         <Field label="What did you acquire?" hint="New knowledge, technique or concept from this cycle.">
