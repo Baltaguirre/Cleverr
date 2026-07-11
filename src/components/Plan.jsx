@@ -21,11 +21,8 @@ const ResourceCard = ({ resource, topic, passphrase, onUpdate }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const toggle = async () => {
-    const next = !open
-    setOpen(next)
-    if (!next || resource.summary || loading) return
-
+  const fetchSummary = async () => {
+    if (loading) return
     if (!passphrase) {
       setError('Add your access passphrase in AI settings to generate summaries.')
       return
@@ -36,12 +33,24 @@ const ResourceCard = ({ resource, topic, passphrase, onUpdate }) => {
       const data = await generateStage('resource', topic, passphrase, {
         resource: { title: resource.title, note: resource.note },
       })
-      onUpdate(resource.id, { summary: data.fields.summary, digDeeper: data.fields.digDeeper })
+      onUpdate(resource.id, {
+        summary: data.fields.summary,
+        digDeeper: data.fields.digDeeper,
+        recommendations: data.fields.recommendations || [],
+      })
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  const toggle = () => {
+    const next = !open
+    setOpen(next)
+    // Only auto-generate the first time a card is opened; later opens reuse the
+    // cached summary. Use Regenerate to refresh it.
+    if (next && !resource.summary) fetchSummary()
   }
 
   return (
@@ -58,6 +67,33 @@ const ResourceCard = ({ resource, topic, passphrase, onUpdate }) => {
           {resource.summary && <p className="resource-card-summary">{resource.summary}</p>}
           {resource.summary && resource.digDeeper && (
             <p className="resource-card-dig">📖 Dig deeper: {resource.digDeeper}</p>
+          )}
+          {resource.recommendations?.length > 0 && (
+            <div className="resource-card-recs">
+              <p className="resource-card-recs-label">▶ Watch &amp; follow</p>
+              <ul className="resource-card-rec-list">
+                {resource.recommendations.map((rec, i) => (
+                  <li key={i}>
+                    <a
+                      className="resource-card-rec-link"
+                      href={`https://www.youtube.com/results?search_query=${encodeURIComponent(
+                        rec.query || rec.name,
+                      )}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {rec.name}
+                    </a>
+                    {rec.note && <span className="resource-card-rec-note"> — {rec.note}</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {resource.summary && !loading && (
+            <button type="button" className="resource-card-regen" onClick={fetchSummary}>
+              ↻ Regenerate
+            </button>
           )}
         </div>
       )}

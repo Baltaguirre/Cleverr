@@ -12,6 +12,7 @@ export const generateStage = async (stage, topic, passphrase, extra = {}) => {
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
+    console.error(body)
     throw new Error(body.error || `Request failed (${response.status}).`)
   }
 

@@ -907,6 +907,61 @@ textarea {
   padding: 8px 10px;
 }
 
+.resource-card-recs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.resource-card-recs-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-hover);
+}
+
+.resource-card-rec-list {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.resource-card-rec-link {
+  color: var(--accent-hover);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.resource-card-rec-link:hover {
+  text-decoration: underline;
+}
+
+.resource-card-rec-note {
+  color: var(--text-2);
+}
+
+.resource-card-regen {
+  align-self: flex-start;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  background: var(--bg);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.resource-card-regen:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
 .resource-card-status {
   padding-top: 10px;
   font-size: 13px;
